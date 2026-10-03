@@ -1,0 +1,30 @@
+{
+  "name": "v-mac",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usernamex123/v-mac.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  },
+  "bugs": {
+    "url": "https://github.com/usernamex123/v-mac/issues"
+  },
+  "homepage": "https://github.com/usernamex123/v-mac#readme"
+}
