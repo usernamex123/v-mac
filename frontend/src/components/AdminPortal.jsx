@@ -182,7 +182,6 @@ export default function AdminPortal() {
                         {repair.issue_description || '—'}
                       </td>
                       <td className="py-3 px-4 text-gray-600 font-medium">
-                        {repair.service_type === 'home_service' ? 'Home Service' : 'Drop Off'}
                       </td>
                       <td className="py-3 px-4 text-gray-500">
                         {repair.created_at ? new Date(repair.created_at).toLocaleDateString() : '—'}

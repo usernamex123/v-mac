@@ -15,18 +15,9 @@ const DEVICES = [
   { id: 'Other', label: 'Other', icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
 ];
 
-const SERVICE_TYPES = [
-  { id: 'Bring to shop', title: 'Bring to shop', desc: 'Drop off your device at our location.' },
-  { id: 'Pickup/drop-off', title: 'Pickup/drop-off', desc: "We'll pick up and return your device." },
-  { id: 'Home service', title: 'Home service', desc: 'A technician visits your location.' },
-];
-
 const STEPS = [
   { number: 1, title: 'Device' },
   { number: 2, title: 'Details' },
-  { number: 3, title: 'Service' },
-  { number: 4, title: 'Your info' },
-  { number: 5, title: 'Review' },
 ];
 
 export default function RepairBooking() {
@@ -44,13 +35,10 @@ export default function RepairBooking() {
     problem: '',
     description: '',
     photoFile: null,
-    serviceType: 'Bring to shop',
     name: '',
     phone: '',
     email: '',
     address: '',
-    date: '',
-    time: '',
   });
 
   useEffect(() => {
@@ -58,7 +46,6 @@ export default function RepairBooking() {
       const { data: { session } } = await supabase.auth.getSession();
       const localUser = JSON.parse(localStorage.getItem('vmac_current_user') || 'null');
       
-      // Redirect to home if user is not logged in
       if (!session?.user && (!localUser || Object.keys(localUser).length === 0)) {
         navigate('/', { replace: true });
         return;
@@ -96,28 +83,9 @@ export default function RepairBooking() {
         return Boolean(formData.device);
       case 2:
         return Boolean(formData.brand.trim() && formData.problem.trim());
-      case 3:
-        return Boolean(formData.serviceType);
-      case 4:
-        return Boolean(formData.name.trim() && formData.phone.trim() && formData.email.trim() && formData.address.trim());
-      case 5:
-        return Boolean(
-          formData.device && 
-          formData.brand.trim() && 
-          formData.problem.trim() && 
-          formData.serviceType && 
-          formData.name.trim() && 
-          formData.phone.trim() &&
-          formData.email.trim() &&
-          formData.address.trim()
-        );
       default:
         return true;
     }
-  };
-
-  const handleContinue = () => {
-    if (currentStep < 5 && isStepValid()) setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
@@ -132,8 +100,10 @@ export default function RepairBooking() {
 
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.user) {
+      const localUser = JSON.parse(localStorage.getItem('vmac_current_user') || 'null');
+      const user = session?.user || localUser;
+
+      if (sessionError || !user) {
         showToast('You must be logged in to submit a repair request.');
         setIsSubmitting(false);
         return;
@@ -141,7 +111,6 @@ export default function RepairBooking() {
 
       let imageUrl = null;
 
-      // 1. Upload photo to Supabase Storage if selected (Camera or Gallery)
       if (formData.photoFile) {
         const fileExt = formData.photoFile.name.split('.').pop() || 'jpg';
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -164,13 +133,6 @@ export default function RepairBooking() {
         imageUrl = publicUrlData.publicUrl;
       }
 
-      let dbServiceType = 'drop_off';
-      if (formData.serviceType === 'Home service') {
-        dbServiceType = 'home_service';
-      } else {
-        dbServiceType = 'drop_off';
-      }
-
       const brandModel = formData.model.trim() 
         ? `${formData.brand.trim()} ${formData.model.trim()}` 
         : formData.brand.trim();
@@ -179,22 +141,22 @@ export default function RepairBooking() {
         ? `${formData.problem.trim()} - Details: ${formData.description.trim()}`
         : formData.problem.trim();
 
-      // 2. Send repair data including image_url and address to backend API
+      const registeredEmail = user.email || formData.email;
+
       const response = await fetch('http://localhost:5000/api/repairs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customer_id: session.user.id,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
+          customer_id: user.id || user.uid,
+          name: formData.name || user.user_metadata?.name || '',
+          email: registeredEmail,
+          phone: formData.phone || user.user_metadata?.phone || '',
+          address: formData.address || user.user_metadata?.address || '',
           device_type: formData.device,
           brand_model: brandModel,
           issue_description: issueDescription,
-          service_type: dbServiceType,
           image_url: imageUrl,
         }),
       });
@@ -257,8 +219,8 @@ export default function RepairBooking() {
           </p>
         </div>
 
-        <div className="mb-12 hidden sm:flex justify-between items-center px-4 relative">
-          <div className="absolute left-8 right-8 top-4 h-[2px] bg-gray-200 -z-10" />
+        <div className="mb-12 hidden sm:flex justify-between items-center px-4 relative max-w-md mx-auto">
+          <div className="absolute left-12 right-12 top-4 h-[2px] bg-gray-200 -z-10" />
           {STEPS.map((step) => {
             const isCompleted = currentStep > step.number;
             const isCurrent = currentStep === step.number;
@@ -288,20 +250,23 @@ export default function RepairBooking() {
             <div>
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Select your device</h2>
-                <p className="text-gray-400 text-xs mt-1">What kind of device needs repair?</p>
+                <p className="text-gray-400 text-xs mt-1">What kind of device needs repair? Click any device to continue.</p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-10">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
                 {DEVICES.map((dev) => {
                   const isSelected = formData.device === dev.id;
                   return (
                     <button
                       key={dev.id}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, device: dev.id }))}
-                      className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all ${
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, device: dev.id }));
+                        setCurrentStep(2);
+                      }}
+                      className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all cursor-pointer ${
                         isSelected 
                           ? 'border-blue-600 bg-blue-50/40 text-blue-600 shadow-sm ring-1 ring-blue-600' 
-                          : 'border-gray-200/80 hover:border-gray-300 text-gray-600 bg-white'
+                          : 'border-gray-200/80 hover:border-gray-300 hover:bg-gray-50/50 text-gray-600 bg-white'
                       }`}
                     >
                       <svg className="w-7 h-7 mb-3 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,7 +337,6 @@ export default function RepairBooking() {
                   />
                 </div>
 
-                {/* Cross-Browser & Camera Compatible Photo Input */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Photo / Issue Proof (optional)</label>
                   <div className="flex items-center space-x-4">
@@ -406,167 +370,6 @@ export default function RepairBooking() {
             </div>
           )}
 
-          {currentStep === 3 && (
-            <div>
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Choose service type</h2>
-                <p className="text-gray-400 text-xs mt-1">How would you like to get your device to us?</p>
-              </div>
-
-              <div className="space-y-4 mb-10">
-                {SERVICE_TYPES.map((service) => {
-                  const isSelected = formData.serviceType === service.id;
-                  return (
-                    <div
-                      key={service.id}
-                      onClick={() => setFormData(prev => ({ ...prev, serviceType: service.id }))}
-                      className={`p-5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
-                        isSelected 
-                          ? 'border-blue-600 bg-blue-50/30 ring-1 ring-blue-600 shadow-sm' 
-                          : 'border-gray-200/80 hover:border-gray-300 bg-white'
-                      }`}
-                    >
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900">{service.title}</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">{service.desc}</p>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
-                        {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {currentStep === 4 && (
-            <div>
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Your information</h2>
-                <p className="text-gray-400 text-xs mt-1">So we can contact you and email your confirmation.</p>
-              </div>
-
-              <div className="space-y-4 mb-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">FULL NAME / COMPANY NAME *</label>
-                    <input 
-                      type="text" 
-                      name="name" 
-                      value={formData.name} 
-                      onChange={handleChange} 
-                      placeholder="Your name or company name" 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Phone *</label>
-                    <input 
-                      type="text" 
-                      name="phone" 
-                      value={formData.phone} 
-                      onChange={handleChange} 
-                      placeholder="Your phone" 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Email *</label>
-                  <input 
-                    type="email" 
-                    name="email" 
-                    value={formData.email} 
-                    onChange={handleChange} 
-                    placeholder="you@example.com" 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Address *</label>
-                  <input 
-                    type="text" 
-                    name="address" 
-                    value={formData.address} 
-                    onChange={handleChange} 
-                    placeholder="Your address" 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Preferred date</label>
-                    <input 
-                      type="date" 
-                      name="date" 
-                      value={formData.date} 
-                      onChange={handleChange} 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm text-gray-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Preferred time</label>
-                    <input 
-                      type="time" 
-                      name="time" 
-                      value={formData.time} 
-                      onChange={handleChange} 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm text-gray-700"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 5 && (
-            <div>
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Review & confirm</h2>
-                <p className="text-gray-400 text-xs mt-1">Check the details before submitting.</p>
-              </div>
-
-              <div className="space-y-4 mb-10 text-sm">
-                <div className="bg-gray-50/70 p-5 rounded-2xl border border-gray-200/80">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-3">Device</span>
-                  <div className="grid grid-cols-2 gap-y-2">
-                    <div><span className="text-gray-400 text-xs">Type</span> <p className="font-medium text-gray-800">{formData.device || '—'}</p></div>
-                    <div><span className="text-gray-400 text-xs">Brand</span> <p className="font-medium text-gray-800">{formData.brand || '—'}</p></div>
-                    <div><span className="text-gray-400 text-xs">Model</span> <p className="font-medium text-gray-800">{formData.model || '—'}</p></div>
-                    <div><span className="text-gray-400 text-xs">Problem</span> <p className="font-medium text-gray-800">{formData.problem || '—'}</p></div>
-                    <div className="col-span-2 mt-2">
-                      <span className="text-gray-400 text-xs">Attached Photo</span> 
-                      <p className="font-medium text-blue-600">{formData.photoFile ? formData.photoFile.name : 'None'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50/70 p-5 rounded-2xl border border-gray-200/80">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-3">Service</span>
-                  <div className="grid grid-cols-2 gap-y-2">
-                    <div><span className="text-gray-400 text-xs">Service type</span> <p className="font-medium text-gray-800">{formData.serviceType}</p></div>
-                    <div><span className="text-gray-400 text-xs">Preferred date</span> <p className="font-medium text-gray-800">{formData.date || '—'}</p></div>
-                    <div><span className="text-gray-400 text-xs">Preferred time</span> <p className="font-medium text-gray-800">{formData.time || '—'}</p></div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50/70 p-5 rounded-2xl border border-gray-200/80">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-3">Contact</span>
-                  <div className="grid grid-cols-2 gap-y-2">
-                    <div><span className="text-gray-400 text-xs">Name / Company</span> <p className="font-medium text-gray-800">{formData.name || '—'}</p></div>
-                    <div><span className="text-gray-400 text-xs">Phone</span> <p className="font-medium text-gray-800">{formData.phone || '—'}</p></div>
-                    <div className="col-span-2"><span className="text-gray-400 text-xs">Email</span> <p className="font-medium text-gray-800">{formData.email || '—'}</p></div>
-                    <div className="col-span-2"><span className="text-gray-400 text-xs">Address</span> <p className="font-medium text-gray-800">{formData.address || '—'}</p></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="flex justify-between items-center pt-8 border-t border-gray-100">
             {currentStep > 1 ? (
               <button
@@ -579,20 +382,7 @@ export default function RepairBooking() {
               </button>
             ) : <div />}
 
-            {currentStep < 5 ? (
-              <button
-                type="button"
-                onClick={handleContinue}
-                disabled={!isStepValid()}
-                className={`px-8 py-3 rounded-full text-xs font-semibold transition-all shadow-sm ${
-                  !isStepValid()
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 hover:shadow-blue-500/30 shadow-md cursor-pointer'
-                }`}
-              >
-                Continue →
-              </button>
-            ) : (
+            {currentStep === 2 && (
               <button
                 type="button"
                 onClick={handleSubmit}
@@ -600,7 +390,7 @@ export default function RepairBooking() {
                 className={`px-8 py-3 rounded-full text-xs font-semibold transition-all shadow-sm ${
                   !isStepValid() || isSubmitting
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 shadow-md cursor-pointer'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25 shadow-md cursor-pointer'
                 }`}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit request →'}

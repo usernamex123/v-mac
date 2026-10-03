@@ -196,8 +196,7 @@ export default function AdminPortalDetails() {
 
               <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Service Type</span>
-                <p className="text-sm font-medium text-gray-900">
-                  {repair.service_type === 'home_service' ? 'Home Service' : 'Drop Off'}
+                <p className="">
                 </p>
               </div>
 

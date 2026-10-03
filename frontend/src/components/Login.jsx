@@ -30,7 +30,6 @@ export default function Login({ isOpen, onClose }) {
           setError('Passwords do not match.');
           setLoading(false);
           return;
-          console.log("Admin Email from env:", import.meta.env.VITE_ADMIN_EMAIL);
         }
 
         // Register securely using Supabase Auth and pass profile data as metadata
@@ -62,10 +61,6 @@ export default function Login({ isOpen, onClose }) {
         const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
         const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
 
-        console.log("Typed Email:", email);
-        console.log("Env Admin Email:", adminEmail);
-        console.log("Do they match?", email === adminEmail);
-
         if (email === adminEmail && password === adminPassword) {
           localStorage.setItem('vmac_admin_auth', 'true');
           setSuccess('Welcome Admin!');
@@ -76,12 +71,11 @@ export default function Login({ isOpen, onClose }) {
           return;
         }
 
-        // 2. Otherwise, log in securely using Supabase Auth for regular users[cite: 10]
+        // 2. Otherwise, log in securely using Supabase Auth for regular users
         const { data, error: loginError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        navigate('/user-portal');
 
         if (loginError) throw loginError;
 
@@ -91,6 +85,7 @@ export default function Login({ isOpen, onClose }) {
 
         setTimeout(() => {
           onClose();
+          navigate('/user-portal');
           window.location.reload(); // Refresh to update UI state
         }, 800);
       }
@@ -188,9 +183,10 @@ export default function Login({ isOpen, onClose }) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Address</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Address *</label>
                 <input 
                   type="text" 
+                  required
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="123 Street, City" 

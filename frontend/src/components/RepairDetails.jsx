@@ -118,7 +118,6 @@ export default function RepairDetails() {
             </div>
             <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-200/60">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">Service type</span>
-              <p className="text-xs font-medium text-gray-800 capitalize">{repair.service_type?.replace('_', ' ') || '—'}</p>
             </div>
             <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-200/60">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">Preferred date</span>

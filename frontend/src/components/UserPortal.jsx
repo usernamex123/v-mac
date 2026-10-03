@@ -157,7 +157,6 @@ export default function UserPortal() {
                   <div className="space-y-1.5 text-xs text-gray-500 mb-6">
                     <p><span className="text-gray-400">Device Type:</span> {repair.device_type}</p>
                     <p><span className="text-gray-400">Issue:</span> {repair.issue_description}</p>
-                    <p><span className="text-gray-400">Service:</span> {repair.service_type === 'home_service' ? 'Home service' : 'Drop off'}</p>
                     <p><span className="text-gray-400">Submitted:</span> {new Date(repair.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
