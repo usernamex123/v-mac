@@ -47,15 +47,18 @@ export default function Login({ isOpen, onClose }) {
 
         if (signUpError) throw signUpError;
 
-        setSuccess('Registration successful! You can now log in.');
-        setIsRegister(false);
-        // Clear form
-        setName('');
-        setPhone('');
-        setEmail('');
-        setAddress('');
-        setPassword('');
-        setConfirmPassword('');
+        // Save active session locally just like login
+        if (data.user) {
+          localStorage.setItem('vmac_current_user', JSON.stringify(data.user));
+        }
+
+        setSuccess('Registration successful! Redirecting...');
+
+        setTimeout(() => {
+          onClose();
+          navigate('/repair-booking');
+          window.location.reload(); // Refresh to update UI state on home/nav
+        }, 800);
       } else {
         // 1. Check if input matches .env admin credentials first
         const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
