@@ -88,7 +88,7 @@ export default function Login({ isOpen, onClose }) {
 
         setTimeout(() => {
           onClose();
-          navigate('/user-portal');
+          navigate('repair-booking');
           window.location.reload(); // Refresh to update UI state
         }, 800);
       }
