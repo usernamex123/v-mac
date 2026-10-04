@@ -64,6 +64,10 @@ export default function AdminPortalDetails() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => setToast({ show: false, message: '' }), 4000);
@@ -71,9 +75,24 @@ export default function AdminPortalDetails() {
 
   return (
     <div className="min-h-screen bg-[#FBFBFD] text-[#1D1D1F] selection:bg-blue-600 selection:text-white pb-24">
+      {/* Print Styles optimized for single-page fit and zero browser chrome */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page {
+            margin: 5mm;
+            size: portrait;
+          }
+          body {
+            margin: 0 !important;
+            background-color: white !important;
+            -webkit-print-color-adjust: exact;
+          }
+        }
+      ` }} />
+
       {/* Toast Notification */}
       {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/90 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all text-xs font-medium">
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/90 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all text-xs font-medium print:hidden">
           <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -82,7 +101,7 @@ export default function AdminPortalDetails() {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-gray-200/60">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-gray-200/60 print:hidden">
         <div className="max-w-5xl mx-auto px-8 h-16 flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <span className="text-xl font-semibold tracking-tight">
@@ -102,8 +121,8 @@ export default function AdminPortalDetails() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 pt-12">
-        <div className="mb-8 flex justify-between items-center">
+      <main className="max-w-5xl mx-auto px-6 pt-12 print:p-0">
+        <div className="mb-8 flex justify-between items-center print:hidden">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
               Repair Entry Details
@@ -115,135 +134,195 @@ export default function AdminPortalDetails() {
         </div>
 
         {isLoading ? (
-          <div className="bg-white rounded-3xl border border-gray-200/60 p-16 text-center text-xs text-gray-400 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+          <div className="bg-white rounded-3xl border border-gray-200/60 p-16 text-center text-xs text-gray-400 shadow-[0_4px_24px_rgba(0,0,0,0.02)] print:hidden">
             Loading details...
           </div>
         ) : !repair ? (
-          <div className="bg-white rounded-3xl border border-gray-200/60 p-16 text-center text-xs text-gray-400 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+          <div className="bg-white rounded-3xl border border-gray-200/60 p-16 text-center text-xs text-gray-400 shadow-[0_4px_24px_rgba(0,0,0,0.02)] print:hidden">
             Repair request not found.
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-gray-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] p-8 md:p-12 space-y-8">
-            
-            {/* Status & Timestamp */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-gray-100">
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Current Status</span>
-                <select
-                  value={repair.status || 'Request Received'}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className={`px-3.5 py-1.5 rounded-full font-semibold text-xs border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-                    repair.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/60' :
-                    repair.status === 'In Repair' ? 'bg-amber-50 text-amber-600 border-amber-200/60' :
-                    'bg-blue-50 text-blue-600 border-blue-200/60'
-                  }`}
-                >
-                  <option value="Request Received">Request Received</option>
-                  <option value="In Repair">In Repair</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </div>
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Submitted At</span>
-                <span className="text-xs font-medium text-gray-700">
-                  {repair.created_at ? new Date(repair.created_at).toLocaleString() : '—'}
-                </span>
-              </div>
-            </div>
-
-            {/* All Database Fields Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <>
+            {/* Screen View */}
+            <div className="bg-white rounded-3xl border border-gray-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] p-8 md:p-12 space-y-8 print:hidden">
               
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Repair Number</span>
-                <p className="text-sm font-mono font-semibold text-blue-600 tracking-tight">{repair['repair-number'] || '—'}</p>
+              {/* Status, Print Button & Timestamp */}
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Current Status</span>
+                    <select
+                      value={repair.status || 'Request Received'}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className={`px-3.5 py-2 rounded-full font-semibold text-xs border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                        repair.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/60' :
+                        repair.status === 'In Repair' ? 'bg-amber-50 text-amber-600 border-amber-200/60' :
+                        'bg-blue-50 text-blue-600 border-blue-200/60'
+                      }`}
+                    >
+                      <option value="Request Received">Request Received</option>
+                      <option value="In Repair">In Repair</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+                  <div className="self-end">
+                    <button
+                      onClick={handlePrint}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer h-[34px]"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      Print Receipt
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Submitted At</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    {repair.created_at ? new Date(repair.created_at).toLocaleString() : '—'}
+                  </span>
+                </div>
               </div>
 
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">User ID</span>
-                <p className="text-sm font-mono font-semibold text-gray-800 tracking-tight">{repair['user-id'] || '—'}</p>
+              {/* All Database Fields Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Repair Number</span>
+                  <p className="text-sm font-mono font-semibold text-blue-600 tracking-tight">{repair['repair-number'] || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">User ID</span>
+                  <p className="text-sm font-mono font-semibold text-gray-800 tracking-tight">{repair['user-id'] || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Full Name / Company Name</span>
+                  <p className="text-sm font-medium text-gray-900">{repair.name || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Phone Number</span>
+                  <p className="text-sm font-medium text-gray-900">{repair.phone || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Email Address</span>
+                  <p className="text-sm font-medium text-gray-900">{repair.email || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Address</span>
+                  <p className="text-sm font-medium text-gray-900">{repair.address || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Device Type</span>
+                  <p className="text-sm font-medium text-gray-900">{repair.device_type || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Brand & Model</span>
+                  <p className="text-sm font-medium text-gray-900">{repair.brand_model || '—'}</p>
+                </div>
+
+                <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60 md:col-span-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Issue Description</span>
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{repair.issue_description || '—'}</p>
+                </div>
+
               </div>
 
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Full Name / Company Name</span>
-                <p className="text-sm font-medium text-gray-900">{repair.name || '—'}</p>
-              </div>
+              {/* Attached Image Section */}
+              <div className="bg-[#FBFBFD] p-6 rounded-2xl border border-gray-200/60 pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Attached Image Preview</span>
+                  {repair.image_url && (
+                    <a
+                      href={repair.image_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center space-x-1"
+                    >
+                      <span>Open Full Size</span>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
 
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Phone Number</span>
-                <p className="text-sm font-medium text-gray-900">{repair.phone || '—'}</p>
-              </div>
-
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Email Address</span>
-                <p className="text-sm font-medium text-gray-900">{repair.email || '—'}</p>
-              </div>
-
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Address</span>
-                <p className="text-sm font-medium text-gray-900">{repair.address || '—'}</p>
-              </div>
-
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Device Type</span>
-                <p className="text-sm font-medium text-gray-900">{repair.device_type || '—'}</p>
-              </div>
-
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Brand & Model</span>
-                <p className="text-sm font-medium text-gray-900">{repair.brand_model || '—'}</p>
-              </div>
-
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Service Type</span>
-                <p className="">
-                </p>
-              </div>
-
-              <div className="bg-[#FBFBFD] p-5 rounded-2xl border border-gray-200/60 md:col-span-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1.5">Issue Description</span>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{repair.issue_description || '—'}</p>
-              </div>
-
-            </div>
-
-            {/* Attached Image Section (At the Bottom) */}
-            <div className="bg-[#FBFBFD] p-6 rounded-2xl border border-gray-200/60 pt-6">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Attached Image Preview</span>
-                {repair.image_url && (
-                  <a
-                    href={repair.image_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center space-x-1"
-                  >
-                    <span>Open Full Size</span>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+                {repair.image_url ? (
+                  <div className="rounded-xl overflow-hidden border border-gray-200/60 bg-white flex items-center justify-center p-4">
+                    <img
+                      src={repair.image_url}
+                      alt="Repair Issue"
+                      className="max-h-[420px] w-auto object-contain rounded-lg cursor-zoom-in hover:opacity-95 transition-opacity"
+                      onClick={() => window.open(repair.image_url, '_blank')}
+                      title="Click to view full size"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-12 text-center bg-white rounded-xl border border-gray-200/60 text-xs text-gray-400 font-medium">
+                    No image found
+                  </div>
                 )}
               </div>
 
-              {repair.image_url ? (
-                <div className="rounded-xl overflow-hidden border border-gray-200/60 bg-white flex items-center justify-center p-4">
-                  <img
-                    src={repair.image_url}
-                    alt="Repair Issue"
-                    className="max-h-[420px] w-auto object-contain rounded-lg cursor-zoom-in hover:opacity-95 transition-opacity"
-                    onClick={() => window.open(repair.image_url, '_blank')}
-                    title="Click to view full size"
-                  />
-                </div>
-              ) : (
-                <div className="p-12 text-center bg-white rounded-xl border border-gray-200/60 text-xs text-gray-400 font-medium">
-                  No image found
-                </div>
-              )}
             </div>
 
-          </div>
+            {/* Apple-Aesthetic Minimalist Single-Page Print Receipt Layout */}
+            <div className="hidden print:block bg-white text-[#1D1D1F] p-4 max-w-md mx-auto font-sans">
+              <div className="flex justify-between items-start border-b border-gray-200 pb-3 mb-3">
+                <div>
+                  <h2 className="text-lg font-bold tracking-tight">
+                    <span className="text-blue-600">V-</span>Mac
+                  </h2>
+                  <p className="text-[10px] text-gray-500 mt-0.5">Repair Service Receipt</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono font-semibold text-blue-600">{repair['repair-number']}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    {repair.created_at ? new Date(repair.created_at).toLocaleDateString() : '—'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="grid grid-cols-2 gap-4 pb-3 border-b border-gray-100">
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-0.5">Customer</span>
+                    <p className="font-semibold text-gray-900">{repair.name || '—'}</p>
+                    <p className="text-gray-600 mt-0.5">{repair.phone || '—'}</p>
+                    <p className="text-gray-600 mt-0.5">{repair.email || '—'}</p>
+                    <p className="text-gray-600 mt-0.5">{repair.address || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-0.5">Device & Status</span>
+                    <p className="font-semibold text-gray-900">{repair.device_type} ({repair.brand_model})</p>
+                    <p className="mt-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-0.5">Current Status</span>
+                      <span className="font-semibold text-blue-600">{repair.status}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 block mb-0.5">Issue Description</span>
+                  <p className="text-gray-800 bg-gray-50 p-2.5 rounded-xl border border-gray-100 leading-relaxed">
+                    {repair.issue_description || '—'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-3 border-t border-gray-100 text-center">
+                <p className="text-[10px] text-gray-400">Thank you for trusting V-Mac. Please keep this receipt for pickup.</p>
+              </div>
+            </div>
+          </>
         )}
       </main>
     </div>
