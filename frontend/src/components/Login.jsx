@@ -162,7 +162,7 @@ export default function Login({ isOpen, onClose }) {
           {isRegister && (
             <>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Full Name *</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Full Name/COMPANY NAME *</label>
                 <input 
                   type="text" 
                   required 
