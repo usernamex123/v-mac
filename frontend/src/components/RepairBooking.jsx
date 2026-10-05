@@ -345,14 +345,18 @@ export default function RepairBooking() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                       </svg>
                       <span className="text-xs text-gray-700 font-medium text-center">
-                        {formData.photoFile ? formData.photoFile.name : 'Click to snap photo or upload image'}
+                        {formData.photoFile ? formData.photoFile.name : 'Click to select image file'}
                       </span>
-                      <span className="text-[10px] text-gray-400 mt-1">Supports JPG, PNG, WEBP (Camera & Gallery)</span>
+                      <span className="text-[10px] text-gray-400 mt-1">Supports JPG, PNG, WEBP</span>
                       <input 
                         type="file" 
                         accept="image/jpeg,image/png,image/webp" 
+                        capture={false}
                         className="hidden" 
-                        onChange={(e) => setFormData(prev => ({ ...prev, photoFile: e.target.files[0] || null }))}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setFormData(prev => ({ ...prev, photoFile: file }));
+                        }}
                       />
                     </label>
                     {formData.photoFile && (

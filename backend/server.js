@@ -31,7 +31,6 @@ app.post('/api/repairs', async (req, res) => {
       device_type, 
       brand_model, 
       issue_description, 
-      service_type,
       image_url         // 2. Added image_url here
     } = req.body;
 
@@ -48,7 +47,6 @@ app.post('/api/repairs', async (req, res) => {
           device_type,
           brand_model,
           issue_description,
-          service_type,
           image_url,        // 5. Passed to database
           status: 'Submitted'
         }
@@ -96,7 +94,6 @@ app.post('/api/repairs', async (req, res) => {
                     </tr>
                     <tr>
                       <td style="padding: 6px 0; color: #6E6E73;">Service Type:</td>
-                      <td style="padding: 6px 0; font-weight: 600; text-align: right;">${service_type === 'home_service' ? 'Home Service' : 'Drop Off'}</td>
                     </tr>
                     <tr>
                       <td style="padding: 6px 0; color: #6E6E73;">Address:</td>
