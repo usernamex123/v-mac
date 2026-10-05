@@ -15,11 +15,6 @@ const DEVICES = [
   { id: 'Other', label: 'Other', icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
 ];
 
-const STEPS = [
-  { number: 1, title: 'Device' },
-  { number: 2, title: 'Details' },
-];
-
 export default function RepairBooking() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,8 +25,7 @@ export default function RepairBooking() {
 
   const [formData, setFormData] = useState({
     device: location.state?.device || '',
-    brand: '',
-    model: '',
+    brand: '', // acts as brand + model combined (e.g. "M1 Air")
     problem: '',
     description: '',
     photoFile: null,
@@ -133,9 +127,8 @@ export default function RepairBooking() {
         imageUrl = publicUrlData.publicUrl;
       }
 
-      const brandModel = formData.model.trim() 
-        ? `${formData.brand.trim()} ${formData.model.trim()}` 
-        : formData.brand.trim();
+      // Combine device type with brand input (e.g., "Mac" + "M1 Air" = "Mac M1 Air")
+      const combinedDeviceType = `${formData.device} ${formData.brand.trim()}`.trim();
 
       const issueDescription = formData.description.trim()
         ? `${formData.problem.trim()} - Details: ${formData.description.trim()}`
@@ -156,8 +149,7 @@ export default function RepairBooking() {
           email: registeredEmail,
           phone: formData.phone || user.user_metadata?.phone || '',
           address: formData.address || user.user_metadata?.address || '',
-          device_type: formData.device,
-          brand_model: brandModel,
+          device_type: combinedDeviceType,
           issue_description: issueDescription,
           image_url: imageUrl,
         }),
@@ -211,39 +203,14 @@ export default function RepairBooking() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 pt-12">
-        <div className="text-center mb-10">
+      <main className="max-w-3xl mx-auto px-6 pt-6 md:pt-8">
+        <div className="text-center mb-6">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
             Book a Repair
           </h1>
-          <p className="text-gray-500 text-sm mt-2">
+          <p className="text-gray-500 text-sm mt-1.5">
             Tell us about your device and we'll take it from there.
           </p>
-        </div>
-
-        <div className="mb-12 hidden sm:flex justify-between items-center px-4 relative max-w-md mx-auto">
-          <div className="absolute left-12 right-12 top-4 h-[2px] bg-gray-200 -z-10" />
-          {STEPS.map((step) => {
-            const isCompleted = currentStep > step.number;
-            const isCurrent = currentStep === step.number;
-
-            return (
-              <div key={step.number} className="flex flex-col items-center bg-[#FBFBFD] px-2">
-                <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                    isCompleted || isCurrent
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                      : 'bg-white text-gray-400 border border-gray-200'
-                  }`}
-                >
-                  {isCompleted ? '✓' : step.number}
-                </div>
-                <span className={`text-xs mt-2 font-medium ${isCurrent ? 'text-gray-900 font-semibold' : 'text-gray-400'}`}>
-                  {step.title}
-                </span>
-              </div>
-            );
-          })}
         </div>
 
         <div className="bg-white rounded-3xl border border-gray-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.02)] p-8 md:p-12 transition-all">
@@ -286,37 +253,24 @@ export default function RepairBooking() {
             <div>
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Device details</h2>
-                <p className="text-gray-400 text-xs mt-1">Tell us about the brand and the problem.</p>
+                <p className="text-gray-400 text-xs mt-1">Tell us your specific brand and model details.</p>
               </div>
 
               <div className="space-y-5 mb-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Brand *</label>
-                    <input 
-                      type="text" 
-                      name="brand" 
-                      value={formData.brand} 
-                      onChange={handleChange} 
-                      placeholder="e.g. Apple, Dell, Samsung" 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Model</label>
-                    <input 
-                      type="text" 
-                      name="model" 
-                      value={formData.model} 
-                      onChange={handleChange} 
-                      placeholder="e.g. MacBook Pro, Galaxy S22" 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">BRAND & MODEL *</label>
+                  <input 
+                    type="text" 
+                    name="brand" 
+                    value={formData.brand} 
+                    onChange={handleChange} 
+                    placeholder="e.g. M1 Air, XPS 15, Galaxy S22" 
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Problem *</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">PROBLEM *</label>
                   <input 
                     type="text" 
                     name="problem" 
@@ -328,7 +282,7 @@ export default function RepairBooking() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Description</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">DESCRIPTION</label>
                   <textarea 
                     name="description" 
                     rows="3" 
@@ -340,7 +294,7 @@ export default function RepairBooking() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Photo / Issue Proof (optional)</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">PHOTO / ISSUE PROOF (OPTIONAL)</label>
                   <div className="flex items-center space-x-4">
                     <label className="flex-1 border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-gray-50/50">
                       <svg className="w-6 h-6 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
