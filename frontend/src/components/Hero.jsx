@@ -1,26 +1,45 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import Login from './Login';
 
 export default function Hero() {
+  const navigate = useNavigate();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    // Check if user is logged in
-    const savedUser = localStorage.getItem('vmac_current_user');
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse user session');
+    // 1. Verify actual live Supabase session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        localStorage.setItem('vmac_current_user', JSON.stringify(session.user));
+      } else {
+        setCurrentUser(null);
+        localStorage.removeItem('vmac_current_user');
       }
-    }
+    });
+
+    // 2. Listen for real-time auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        localStorage.setItem('vmac_current_user', JSON.stringify(session.user));
+      } else {
+        setCurrentUser(null);
+        localStorage.removeItem('vmac_current_user');
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleGetStarted = (e) => {
     e.preventDefault();
     if (currentUser) {
-      window.location.href = '/user-portal';
+      navigate('/user-portal');
     } else {
       setLoginModalOpen(true);
     }

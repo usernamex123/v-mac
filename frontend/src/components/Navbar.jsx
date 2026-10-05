@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import Login from './Login';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -9,15 +12,27 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState('#hero');
 
   useEffect(() => {
-    // Check if user is logged in
-    const savedUser = localStorage.getItem('vmac_current_user');
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse user session');
+    // 1. Verify actual live Supabase session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        localStorage.setItem('vmac_current_user', JSON.stringify(session.user));
+      } else {
+        setCurrentUser(null);
+        localStorage.removeItem('vmac_current_user');
       }
-    }
+    });
+
+    // 2. Listen for real-time auth changes (handles logouts or session drops)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        localStorage.setItem('vmac_current_user', JSON.stringify(session.user));
+      } else {
+        setCurrentUser(null);
+        localStorage.removeItem('vmac_current_user');
+      }
+    });
 
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -53,6 +68,7 @@ export default function Navbar() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       observer.disconnect();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -124,12 +140,12 @@ export default function Navbar() {
 
             {/* Dynamic Auth / Portal Button */}
             {currentUser ? (
-              <a
-                href="/user-portal"
+              <Link
+                to="/user-portal"
                 className="px-4 py-2 rounded-lg font-medium text-sm transition-all shadow-sm bg-blue-600 hover:bg-blue-700 text-white"
               >
                 User Portal
-              </a>
+              </Link>
             ) : (
               <button
                 onClick={() => setLoginModalOpen(true)}
@@ -143,12 +159,12 @@ export default function Navbar() {
           {/* Mobile Menu & Action Container */}
           <div className="flex items-center space-x-4 md:hidden">
             {currentUser ? (
-              <a
-                href="/user-portal"
+              <Link
+                to="/user-portal"
                 className="px-3 py-1.5 rounded-md font-medium text-xs bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Portal
-              </a>
+              </Link>
             ) : (
               <button
                 onClick={() => setLoginModalOpen(true)}
