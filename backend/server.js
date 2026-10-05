@@ -10,6 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root route for UptimeRobot health check
+app.get('/', (req, res) => {
+  res.status(200).send('V-Mac Backend is live and running!');
+});
+
 // Initialize Supabase with Service Key (for backend operations)
 const supabase = createClient(
   process.env.SUPABASE_URL,
