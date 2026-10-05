@@ -122,6 +122,12 @@ export default function Navbar() {
               >
                 Products
               </a>
+              <Link 
+                to="/shop" 
+                className={`font-medium hover:text-blue-600 transition-colors ${isScrolled ? 'text-gray-700' : 'text-white'}`}
+              >
+                Shop
+              </Link>
               <a 
                 href="#services" 
                 onClick={(e) => scrollToSection(e, '#services')} 
@@ -213,6 +219,13 @@ export default function Navbar() {
             >
               Products
             </a>
+            <Link 
+              to="/shop" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block font-medium text-gray-700 hover:text-blue-600"
+            >
+              Shop
+            </Link>
             <a 
               href="#services" 
               onClick={(e) => scrollToSection(e, '#services')} 

@@ -39,7 +39,7 @@ export default function Hero() {
   const handleGetStarted = (e) => {
     e.preventDefault();
     if (currentUser) {
-      navigate('/user-portal');
+      navigate('/repair-booking');
     } else {
       setLoginModalOpen(true);
     }
