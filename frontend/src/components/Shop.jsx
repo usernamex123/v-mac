@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, ChevronRight } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
-import Navbar from './Navbar';
 
 const ALL_PRODUCTS = [
   {
@@ -103,8 +102,18 @@ export default function Shop() {
 
   const handleAddToCart = (product) => {
     setCartCount(prev => prev + 1);
-    toast.success(`Added ${product.name} to cart!`, {
-      description: `$${product.price} • Ready for fast dispatch`
+    toast.custom((t) => (
+      <div className="flex items-center gap-3.5 bg-white border border-gray-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.08)] rounded-2xl p-4 w-80 pointer-events-auto">
+        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+          <ShoppingBag className="w-5 h-5 text-blue-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-blue-600 truncate">{product.name}</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">Added to cart • ${product.price}</p>
+        </div>
+      </div>
+    ), {
+      duration: 1500,
     });
   };
 
@@ -117,10 +126,44 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen bg-white text-[#1D1D1F] selection:bg-blue-600 selection:text-white pb-24">
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" />
 
-      {/* Imported Navigation Component */}
-      <Navbar cartCount={cartCount} />
+      {/* Navigation Bar */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200/60 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+          {/* Logo */}
+          <Link to="/" className="text-xl font-extrabold tracking-tight text-gray-900 flex items-center space-x-1">
+            <span>V-</span>
+            <span className="text-blue-600">Mac</span>
+          </Link>
+
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-900">
+            <Link to="/" className="hover:text-blue-600 transition-colors">Home</Link>
+            <Link to="/about" className="hover:text-blue-600 transition-colors">About</Link>
+            <Link to="/products" className="hover:text-blue-600 transition-colors">Products</Link>
+            <Link to="/shop" className="text-blue-600 font-semibold transition-colors">Shop</Link>
+            <Link to="/services" className="hover:text-blue-600 transition-colors">Services</Link>
+            <Link to="/contact" className="hover:text-blue-600 transition-colors">Contact</Link>
+          </div>
+
+          {/* Right Action: Clean Bag Icon Redirecting to /shop/bag */}
+          <div className="flex items-center">
+            <Link 
+              to="/shop/bag"
+              className="relative p-2 text-gray-800 hover:text-blue-600 transition-colors cursor-pointer"
+              title="Shopping Bag"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
+      </nav>
 
       {/* Apple Store Hero Section */}
       <section className="max-w-7xl mx-auto px-6 pt-16 pb-10 flex flex-col md:flex-row justify-between items-start md:items-end">
@@ -161,7 +204,7 @@ export default function Shop() {
                     className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
                   />
                 </div>
-                {/* Text positioned cleanly below the image, centered horizontally */}
+                {/* Text positioned cleanly below the image */}
                 <h3 className={`mt-3 text-xs sm:text-sm font-semibold transition-colors ${
                   isSelected 
                     ? 'text-blue-600 font-bold underline decoration-2 underline-offset-4' 
