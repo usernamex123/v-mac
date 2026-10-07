@@ -20,25 +20,20 @@ export default function Products() {
   }, []);
 
   const handleProductClick = (deviceId) => {
-    if (currentUser) {
-      navigate('/repair-booking', { state: { device: deviceId } });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setLoginModalOpen(true);
-    }
+    navigate('/shop', { state: { category: deviceId } });
   };
 
   const productsList = [
     {
       title: 'Laptops',
       deviceId: 'Laptop',
-      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80',
+      image: 'https://media.base44.com/images/public/6abe086a20e68e9886a3d08b/63ca9f434_generated_image.png',
       alt: 'Laptops'
     },
     {
-      title: 'Desktops',
-      deviceId: 'Desktop',
-      image: 'https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=600&q=80',
+      title: 'Monitors',
+      deviceId: 'MOnitors',
+      image: 'https://media.base44.com/images/public/6abe086a20e68e9886a3d08b/0335c7963_generated_image.png',
       alt: 'Desktops'
     },
     {
@@ -48,22 +43,22 @@ export default function Products() {
       alt: 'Printers'
     },
     {
-      title: 'Smartphones',
-      deviceId: 'Phone',
-      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
-      alt: 'Smartphones'
+      title: 'Mouse',
+      deviceId: 'Mouse',
+      image: 'https://media.base44.com/images/public/6abe086a20e68e9886a3d08b/60b951809_generated_image.png',
+      alt: 'Mouse'
     },
     {
       title: 'CCTV Cameras',
       deviceId: 'Other',
-      image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=600&q=80',
+      image: 'https://media.base44.com/images/public/6abe086a20e68e9886a3d08b/6cb9afe13_generated_image.png',
       alt: 'CCTV Cameras'
     },
     {
-      title: 'Internet & Networking',
-      deviceId: 'Internet',
-      image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=600&q=80',
-      alt: 'Internet and Networking'
+      title: 'Keyboard',
+      deviceId: 'Keyboard',
+      image: 'https://media.base44.com/images/public/6abe086a20e68e9886a3d08b/a4d448c88_generated_image.png',
+      alt: 'Keyboard'
     }
   ];
 

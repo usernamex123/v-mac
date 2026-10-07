@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AdminProducts from './AdminProducts';
 
 export default function AdminPortal() {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Tab state ('repairs' or 'products')
+  const [activeTab, setActiveTab] = useState('repairs');
+  
   const [repairs, setRepairs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('All');
@@ -25,14 +31,20 @@ export default function AdminPortal() {
   });
 
   useEffect(() => {
-    // Guard check for admin authentication
     const isAdmin = localStorage.getItem('vmac_admin_auth') === 'true';
     if (!isAdmin) {
       navigate('/');
       return;
     }
+
+    if (location.pathname.includes('/products')) {
+      setActiveTab('products');
+    } else {
+      setActiveTab('repairs');
+    }
+
     fetchRepairs();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const fetchRepairs = async () => {
     setIsLoading(true);
@@ -66,7 +78,6 @@ export default function AdminPortal() {
     setIsSubmitting(true);
 
     try {
-      // Send request through the backend API to trigger the automated confirmation email
       const response = await fetch('http://localhost:5000/api/repairs', {
         method: 'POST',
         headers: {
@@ -92,7 +103,7 @@ export default function AdminPortal() {
         console.error('Error creating repair:', result.error);
         showToast(`Failed to create repair: ${result.error || 'Unknown error'}`);
       } else {
-        showToast(`Repair entry created successfully & automated email sent!`);
+        showToast('Repair entry created successfully & automated email sent!');
         setShowAddModal(false);
         setFormData({
           name: '',
@@ -140,7 +151,7 @@ export default function AdminPortal() {
     <div className="min-h-screen bg-[#FBFBFD] text-[#1D1D1F] selection:bg-blue-600 selection:text-white pb-20">
       {/* Toast Notification */}
       {toast.show && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/90 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all text-xs font-medium">
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all text-xs font-medium">
           <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -160,6 +171,33 @@ export default function AdminPortal() {
               Admin Portal
             </span>
           </div>
+
+          {/* Navigation Tabs */}
+          <div className="hidden md:flex items-center space-x-1 bg-gray-100/80 p-1 rounded-full">
+            <button
+              onClick={() => {
+                setActiveTab('repairs');
+                navigate('/admin-portal');
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'repairs' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Repair Requests
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('products');
+                navigate('/admin-portal/products');
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'products' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Products Inventory
+            </button>
+          </div>
+
           <div className="flex items-center space-x-4">
             <Link to="/" className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
               View Site
@@ -174,139 +212,167 @@ export default function AdminPortal() {
         </div>
       </header>
 
+      {/* Mobile Tab Switcher */}
+      <div className="flex md:hidden justify-center space-x-2 px-6 pt-4">
+        <button
+          onClick={() => {
+            setActiveTab('repairs');
+            navigate('/admin-portal');
+          }}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+            activeTab === 'repairs' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          Repairs
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('products');
+            navigate('/admin-portal/products');
+          }}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+            activeTab === 'products' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          Products
+        </button>
+      </div>
+
       <main className="max-w-7xl mx-auto px-6 pt-10">
-        {/* Title & Overview */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
-            Dashboard Overview
-          </h1>
-          <p className="text-gray-500 text-xs mt-1.5">
-            Manage incoming repair requests and monitor records.
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Total Requests</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.total}</p>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-500">Request Received</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.requestReceived}</p>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-500">In Repair</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.inRepair}</p>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-500">Completed</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.completed}</p>
-          </div>
-        </div>
-
-        {/* Action Bar: Add Repair Button & Filter Tabs */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          {/* Filter Tabs */}
-          <div className="flex space-x-2 overflow-x-auto pb-2 sm:pb-0">
-            {['All', 'Request Received', 'In Repair', 'Completed'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                  filter === tab
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                    : 'bg-white text-gray-600 border border-gray-200/60 hover:bg-gray-50'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* Add Repair Button with + Icon */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm transition-all flex items-center gap-2 cursor-pointer shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Add Repair Entry</span>
-          </button>
-        </div>
-
-        {/* Repairs Table */}
-        <div className="bg-white rounded-3xl border border-gray-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden">
-          {isLoading ? (
-            <div className="p-12 text-center text-xs text-gray-400">Loading repair requests...</div>
-          ) : filteredRepairs.length === 0 ? (
-            <div className="p-12 text-center text-xs text-gray-400">No repair requests found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/50 text-gray-400 uppercase tracking-wider font-semibold text-[10px]">
-                    <th className="py-3 px-4 pl-6">Repair #</th>
-                    <th className="py-3 px-4">Device / Model</th>
-                    <th className="py-3 px-4">Issue Description</th>
-                    <th className="py-3 px-4">Amount</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 pr-6 text-right">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100/80">
-                  {filteredRepairs.map((repair) => (
-                    <tr key={repair.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3 px-4 pl-6 font-semibold text-blue-600 font-mono">
-                        {repair['repair-number'] || '—'}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-semibold text-gray-900 block">{repair.device_type}</span>
-                        <span className="text-gray-500 text-[11px]">{repair.brand_model || '—'}</span>
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 max-w-xs truncate" title={repair.issue_description}>
-                        {repair.issue_description || '—'}
-                      </td>
-                      <td className="py-3 px-4 font-mono font-semibold text-gray-900">
-                        {repair.amount !== null && repair.amount !== undefined ? repair.amount : '—'}
-                      </td>
-                      <td className="py-3 px-4 text-gray-500">
-                        {repair.created_at ? new Date(repair.created_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2.5 py-1 rounded-full font-medium text-[10px] inline-block ${
-                          repair.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/40' :
-                          repair.status === 'In Repair' ? 'bg-amber-50 text-amber-600 border border-amber-200/40' :
-                          'bg-blue-50 text-blue-600 border border-blue-200/40'
-                        }`}>
-                          {repair.status || 'Request Received'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 pr-6 text-right">
-                        <button
-                          onClick={() => navigate(`/admin-portal/details/${repair['repair-number']}`)}
-                          className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-semibold transition-all cursor-pointer"
-                        >
-                          View →
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {activeTab === 'repairs' ? (
+          <>
+            {/* Title & Overview */}
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
+                Dashboard Overview
+              </h1>
+              <p className="text-gray-500 text-xs mt-1.5">
+                Manage incoming repair requests and monitor records.
+              </p>
             </div>
-          )}
-        </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Total Requests</p>
+                <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.total}</p>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-500">Request Received</p>
+                <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.requestReceived}</p>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-500">In Repair</p>
+                <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.inRepair}</p>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-500">Completed</p>
+                <p className="text-2xl font-semibold text-gray-900 mt-1.5">{stats.completed}</p>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex space-x-2 overflow-x-auto pb-2 sm:pb-0">
+                {['All', 'Request Received', 'In Repair', 'Completed'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setFilter(tab)}
+                    className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                      filter === tab
+                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                        : 'bg-white text-gray-600 border border-gray-200/60 hover:bg-gray-50'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm transition-all flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Repair Entry</span>
+              </button>
+            </div>
+
+            {/* Repairs Table */}
+            <div className="bg-white rounded-3xl border border-gray-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden">
+              {isLoading ? (
+                <div className="p-12 text-center text-xs text-gray-400">Loading repair requests...</div>
+              ) : filteredRepairs.length === 0 ? (
+                <div className="p-12 text-center text-xs text-gray-400">No repair requests found.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50/50 text-gray-400 uppercase tracking-wider font-semibold text-[10px]">
+                        <th className="py-3 px-4 pl-6">Repair #</th>
+                        <th className="py-3 px-4">Device / Model</th>
+                        <th className="py-3 px-4">Issue Description</th>
+                        <th className="py-3 px-4">Amount</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 pr-6 text-right">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100/80">
+                      {filteredRepairs.map((repair) => (
+                        <tr key={repair.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="py-3 px-4 pl-6 font-semibold text-blue-600 font-mono">
+                            {repair['repair-number'] || '—'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-semibold text-gray-900 block">{repair.device_type}</span>
+                            <span className="text-gray-500 text-[11px]">{repair.brand_model || '—'}</span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-700 max-w-xs truncate" title={repair.issue_description}>
+                            {repair.issue_description || '—'}
+                          </td>
+                          <td className="py-3 px-4 font-mono font-semibold text-gray-900">
+                            {repair.amount !== null && repair.amount !== undefined ? repair.amount : '—'}
+                          </td>
+                          <td className="py-3 px-4 text-gray-500">
+                            {repair.created_at ? new Date(repair.created_at).toLocaleDateString() : '—'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2.5 py-1 rounded-full font-medium text-[10px] inline-block ${
+                              repair.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/40' :
+                              repair.status === 'In Repair' ? 'bg-amber-50 text-amber-600 border border-amber-200/40' :
+                              'bg-blue-50 text-blue-600 border border-blue-200/40'
+                            }`}>
+                              {repair.status || 'Request Received'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 pr-6 text-right">
+                            <button
+                              onClick={() => navigate(`/admin-portal/details/${repair['repair-number']}`)}
+                              className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-semibold transition-all cursor-pointer"
+                            >
+                              View →
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <AdminProducts />
+        )}
       </main>
 
       {/* Privileged Admin Add Repair Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl border border-gray-200/60 shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Modal Header */}
             <div className="flex justify-between items-center px-8 py-5 border-b border-gray-100 bg-gray-50/50">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Add New Repair Entry</h2>
@@ -320,7 +386,6 @@ export default function AdminPortal() {
               </button>
             </div>
 
-            {/* Modal Form */}
             <form onSubmit={handleCreateRepair} className="p-8 space-y-5 max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -434,7 +499,6 @@ export default function AdminPortal() {
                 />
               </div>
 
-              {/* Modal Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
                 <button
                   type="button"
@@ -452,7 +516,6 @@ export default function AdminPortal() {
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}

@@ -14,6 +14,7 @@ import AdminPortal from './components/AdminPortal';
 import AdminPortalDetails from './components/AdminPortalDetails';
 import Shop from './components/Shop';
 import Bag from './components/Bag';
+import AdminProducts from './components/AdminProducts';
 
 function LandingPage() {
   return (
@@ -42,6 +43,7 @@ function App() {
         <Route path="/admin-portal/details/:id" element={<AdminPortalDetails />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/shop/bag" element={<Bag />} />
+        <Route path="/admin-portal/products" element={<AdminProducts />} />
       </Routes>
     </BrowserRouter>
   );
