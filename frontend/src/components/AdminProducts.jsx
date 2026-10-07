@@ -58,6 +58,16 @@ export default function AdminProducts() {
     setTimeout(() => setToast({ show: false, message: '' }), 4000);
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+    } catch (err) {
+      console.error('Error logging out:', err);
+      navigate('/login');
+    }
+  };
+
   const handleProductInputChange = (e) => {
     const { name, value } = e.target;
     setProductForm(prev => ({ ...prev, [name]: value }));
@@ -187,7 +197,7 @@ export default function AdminProducts() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="min-h-screen bg-gray-50/50 pb-12 animate-in fade-in duration-300">
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-6 right-6 z-50 bg-gray-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all text-xs font-medium">
@@ -198,18 +208,57 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Top Header Section with Back Arrow & Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-        <div className="flex items-center space-x-4">
+      {/* Admin Navbar matching Admin Portal */}
+      <nav className="bg-white border-b border-gray-200/60 sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex items-center space-x-3">
+          <span className="font-bold text-gray-900 tracking-tight text-lg">
+            <span className="text-blue-600">V</span>-Mac
+          </span>
+          <button 
+            onClick={() => navigate('/admin-portal')}
+            className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold border border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer"
+          >
+            Admin Portal
+          </button>
+        </div>
+
+        {/* Center Tab Switcher */}
+        <div className="hidden md:flex items-center bg-gray-100/80 p-1 rounded-full border border-gray-200/60 shadow-inner">
           <button
             onClick={() => navigate('/admin-portal')}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 flex items-center justify-center transition-all cursor-pointer shadow-sm group"
-            title="Back to Dashboard"
+            className="px-5 py-1.5 rounded-full text-xs font-semibold text-gray-600 hover:text-gray-900 transition-all cursor-pointer"
           >
-            <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            Repair Requests
           </button>
+          <button
+            className="px-5 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-900 shadow-sm transition-all cursor-pointer"
+          >
+            Products Inventory
+          </button>
+        </div>
+
+        {/* Right Actions */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/')}
+            className="text-xs font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer hidden sm:block"
+          >
+            View Site
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-all cursor-pointer"
+          >
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        
+        {/* Header Section with Title & Add Button */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
@@ -223,95 +272,96 @@ export default function AdminProducts() {
               Manage live store listings, update pricing, and upload catalog items.
             </p>
           </div>
+
+          <button
+            onClick={() => setShowProductModal(true)}
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add New Product</span>
+          </button>
         </div>
 
-        <button
-          onClick={() => setShowProductModal(true)}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold shadow-sm shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Add New Product</span>
-        </button>
-      </div>
-
-      {/* Products Table */}
-      <div className="bg-white rounded-3xl border border-gray-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden">
-        {isLoading ? (
-          <div className="p-16 text-center text-xs text-gray-400 flex flex-col items-center justify-center space-y-3">
-            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading products inventory...</span>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="p-16 text-center text-xs text-gray-400 flex flex-col items-center justify-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 mb-1">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+        {/* Products Table */}
+        <div className="bg-white rounded-3xl border border-gray-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden">
+          {isLoading ? (
+            <div className="p-16 text-center text-xs text-gray-400 flex flex-col items-center justify-center space-y-3">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading products inventory...</span>
             </div>
-            <p className="font-semibold text-gray-600 text-sm">No products found in database</p>
-            <p className="text-gray-400 text-xs">Click "Add New Product" to publish your first store listing.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/70 text-gray-400 uppercase tracking-wider font-semibold text-[10px]">
-                  <th className="py-3.5 px-4 pl-6">Preview</th>
-                  <th className="py-3.5 px-4">Product Name</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Price</th>
-                  <th className="py-3 px-4">Description</th>
-                  <th className="py-3.5 px-4 pr-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100/80">
-                {products.map((prod) => (
-                  <tr key={prod.id} className="hover:bg-blue-50/30 transition-colors group">
-                    <td className="py-3.5 px-4 pl-6">
-                      <div className="w-11 h-11 rounded-2xl overflow-hidden border border-gray-200/80 bg-gray-50 shrink-0 shadow-sm">
-                        <img 
-                          src={prod.image || 'https://via.placeholder.com/50'} 
-                          alt={prod.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 font-semibold text-gray-900">
-                      {prod.name}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 font-medium text-[10px] border border-blue-100/50">
-                        {prod.category}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-semibold text-gray-900">
-                      ${Number(prod.price).toFixed(2)}
-                    </td>
-                    <td className="py-3.5 px-4 text-gray-600 max-w-xs truncate" title={prod.description}>
-                      {prod.description || '—'}
-                    </td>
-                    <td className="py-3.5 px-4 pr-6 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenEditProduct(prod)}
-                        className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-700 font-semibold transition-all cursor-pointer shadow-xs"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(prod.id)}
-                        className="px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-semibold transition-all cursor-pointer shadow-xs"
-                      >
-                        Delete
-                      </button>
-                    </td>
+          ) : products.length === 0 ? (
+            <div className="p-16 text-center text-xs text-gray-400 flex flex-col items-center justify-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 mb-1">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <p className="font-semibold text-gray-600 text-sm">No products found in database</p>
+              <p className="text-gray-400 text-xs">Click "Add New Product" to publish your first store listing.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/70 text-gray-400 uppercase tracking-wider font-semibold text-[10px]">
+                    <th className="py-3.5 px-4 pl-6">Preview</th>
+                    <th className="py-3.5 px-4">Product Name</th>
+                    <th className="py-3.5 px-4">Category</th>
+                    <th className="py-3.5 px-4">Price</th>
+                    <th className="py-3 px-4">Description</th>
+                    <th className="py-3.5 px-4 pr-6 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="divide-y divide-gray-100/80">
+                  {products.map((prod) => (
+                    <tr key={prod.id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="py-3.5 px-4 pl-6">
+                        <div className="w-11 h-11 rounded-2xl overflow-hidden border border-gray-200/80 bg-gray-50 shrink-0 shadow-sm">
+                          <img 
+                            src={prod.image || 'https://via.placeholder.com/50'} 
+                            alt={prod.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 font-semibold text-gray-900">
+                        {prod.name}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 font-medium text-[10px] border border-blue-100/50">
+                          {prod.category}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-semibold text-gray-900">
+                        ${Number(prod.price).toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-4 text-gray-600 max-w-xs truncate" title={prod.description}>
+                        {prod.description || '—'}
+                      </td>
+                      <td className="py-3.5 px-4 pr-6 text-right space-x-2">
+                        <button
+                          onClick={() => handleOpenEditProduct(prod)}
+                          className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-700 font-semibold transition-all cursor-pointer shadow-xs"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(prod.id)}
+                          className="px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-semibold transition-all cursor-pointer shadow-xs"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Add Product Modal */}
